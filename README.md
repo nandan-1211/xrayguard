@@ -127,3 +127,7 @@ Alternatively, open `XRayGuard_Train_Colab.ipynb` directly in Google Colab to tr
 ## ⚠️ Medical Disclaimer
 
 XRayGuard is developed for **academic and research purposes only**. It is **not** intended for primary clinical diagnosis or medical decision-making. All radiographic findings must be interpreted and verified by a licensed medical professional / radiologist.
+
+## Render web app
+
+The Render-ready Gemini-backed web app lives in [render-app](render-app/). The root [render.yaml](render.yaml) deploys that service without replacing this repository's original model-backed application. Set GEMINI_API_KEY as a Render secret; do not commit .env.

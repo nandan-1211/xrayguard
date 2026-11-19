@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XRayGuard – Chest X-ray report</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<style>
+:root{--navy:#132a34;--teal:#5f9b90;--teal-d:#4c867b;--bg:#eef2f3;--line:#dfe6e8;--mut:#5b6b72;--hi:#c0392b;--near:#b26a00;--ok:#2e7d32}
+*{box-sizing:border-box}
+body{margin:0;font-family:Outfit,system-ui,sans-serif;background:var(--bg);color:var(--navy)}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:20px;line-height:1;vertical-align:-4px;margin-right:6px;color:var(--teal-d)}
+header{background:var(--navy);color:#fff}
+.bar{max-width:1120px;margin:0 auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px}
+.logo{width:34px;height:34px;border-radius:8px;background:#b8ece0;color:var(--navy);display:grid;place-items:center;font-size:22px;font-weight:600}
+.tag{font-size:14px;color:#dfe9ec}
+main{max-width:1120px;margin:0 auto;padding:48px 24px 24px}
+h1{font-size:clamp(40px,6vw,64px);font-weight:800;letter-spacing:-.03em;margin:0}
+.sub{color:var(--mut);font-size:17px;margin:12px 0 32px}
+.grid{display:grid;grid-template-columns:1fr 1.15fr;gap:24px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px}
+.card h2{margin:0;font-size:22px;font-weight:700}
+.hint{color:var(--mut);margin:8px 0 20px;font-size:15px}
+.drop{background:var(--navy);border-radius:12px;min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#d9f2ec;text-align:center;cursor:pointer;overflow:hidden}
+.drop.over{outline:3px dashed #8fd3c4}
+.drop img{width:100%;max-height:420px;object-fit:contain;background:#000}
+.circle{width:46px;height:46px;border:1.5px solid #7fb9ae;border-radius:50%;display:grid;place-items:center;font-size:22px;margin-bottom:14px}
+label.l{display:block;font-weight:700;margin:22px 0 8px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+input[type=file]{font:inherit;font-size:14px;color:var(--mut)}
+select{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.small{color:var(--mut);font-size:13px;margin-top:8px}
+button.go{width:100%;margin-top:20px;padding:14px;border:0;border-radius:10px;background:var(--teal);color:#fff;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+button.go:hover{background:var(--teal-d)}button.go:disabled{opacity:.6;cursor:not-allowed}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+.empty{color:var(--mut);font-size:16px}
+.blk{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.blk h3{margin:0 0 8px;font-size:16px;font-weight:700;display:flex;align-items:center}
+.txt{font-size:15px;line-height:1.6;color:#22363e}
+.score{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;font-size:14px;margin:7px 0}
+.track{height:10px;background:#eef2f3;border-radius:5px;overflow:hidden}
+.fill{height:100%;border-radius:5px}
+.pct{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.heatwrap{position:relative;border-radius:10px;overflow:hidden;background:#000}
+.heatwrap img{width:100%;display:block}
+.heatwrap canvas{position:absolute;inset:0;width:100%;height:100%}
+.tier{margin:6px 0 12px}.tier b{display:block;font-size:13px;color:var(--mut);margin-bottom:6px;font-weight:600}
+.chip{display:inline-block;font-size:13px;padding:4px 10px;border-radius:99px;margin:0 6px 6px 0}
+.chip.hi{background:#fdecea;color:var(--hi)}.chip.near{background:#fff4e0;color:var(--near)}.chip.none{background:#edf7ee;color:var(--ok)}
+.meta{display:flex;justify-content:space-between;color:var(--mut);font-size:13px;margin:4px 0 14px;flex-wrap:wrap;gap:6px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.act{display:inline-flex;align-items:center;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;font:inherit;font-size:14px;cursor:pointer;color:var(--navy)}
+.act:hover{background:#f4f7f8}.act .ms{margin-right:6px}
+.warn{display:flex;gap:10px;background:#fff7e6;border:1px solid #f3d9a4;color:#6f4500;border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.5;margin-top:24px}
+.warn .ms{color:#b26a00}
+.err{background:#fdecea;color:#8e1c1c;border-radius:10px;padding:12px;font-size:14px;margin-top:14px;display:none}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;animation:s .8s linear infinite;vertical-align:-3px;margin-right:8px}
+.spin.dark{border-color:var(--teal);border-right-color:transparent}
+@keyframes s{to{transform:rotate(360deg)}}
+nav.links{display:flex;gap:6px}nav.links a{color:#cfe0e4;text-decoration:none;font-size:14px;padding:7px 12px;border-radius:8px}
+nav.links a.on,nav.links a:hover{background:#21414d;color:#fff}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--teal-d);font-weight:700;margin-bottom:10px}
+.disc{background:#fff;border:1px solid var(--line);border-left:4px solid #e0a43a;border-radius:10px;padding:12px 16px;font-size:14px;color:#4a3b16;margin:-12px 0 22px}
+.status{display:grid;grid-template-columns:1.3fr repeat(3,1fr) auto;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin-bottom:18px}
+@media(max-width:860px){.status{grid-template-columns:1fr 1fr}}
+.status small{display:block;color:var(--mut);font-size:12px}.status b{font-size:15px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#aaa;margin-right:6px}.dot.ok{background:#2e9d5b}.dot.bad{background:#c0392b}
+.status a{color:var(--teal-d);font-weight:600;font-size:14px;text-decoration:none}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:860px){.steps3{grid-template-columns:1fr}}
+.st{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}.st b{display:block;margin-bottom:4px}.st span{color:var(--mut);font-size:14px}
+.num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#dff1ec;color:var(--teal-d);font-size:13px;font-weight:700;margin-right:8px}
+.secno{color:var(--teal-d);font-weight:700;margin-right:8px}
+.priv{font-size:13px;color:var(--mut);margin-top:6px}
+.btns{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-top:20px}.btns .go{margin:0}
+button.clear{border:1px solid var(--line);background:#fff;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;color:var(--navy)}
+.ready{text-align:center;padding:40px 10px;color:var(--mut)}.ready b{display:block;color:var(--navy);font-size:18px;margin-bottom:6px}
+.view{display:none}.view.on{display:block}
+.ev h2{font-size:26px;margin:0 0 6px}.ev .lead{color:var(--mut);margin:0 0 22px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}@media(max-width:860px){.kpis{grid-template-columns:1fr 1fr}}
+.kp{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.kp small{color:var(--mut);font-size:13px}.kp b{display:block;font-size:28px;margin-top:4px}.kp i{font-style:normal;font-size:12px;color:var(--mut)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;background:#fff}.tbl th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--line);padding:9px}.tbl td{padding:9px;border-bottom:1px solid #f0f3f4}.tbl tr.us td{font-weight:700;background:#f2faf7}
+.sect{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px}.sect h3{margin:0 0 4px;font-size:19px}.sect p.n{color:var(--mut);font-size:14px;margin:4px 0 14px}
+.pipe{counter-reset:p;list-style:none;padding:0;margin:0}.pipe li{position:relative;padding:12px 0 12px 46px;border-bottom:1px solid #f0f3f4}.pipe li:before{counter-increment:p;content:counter(p);position:absolute;left:0;top:12px;width:30px;height:30px;border-radius:50%;background:#dff1ec;color:var(--teal-d);display:grid;place-items:center;font-weight:700}
+.pipe b{display:block}.pipe span{color:var(--mut);font-size:14px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}@media(max-width:860px){.three{grid-template-columns:1fr}}
+.tag2{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px}.t-ok{background:#e6f5ec;color:#1e7a43}.t-part{background:#fff4e0;color:#9a5a00}.t-no{background:#fdecea;color:#a12a20}
+.cv{border:2px solid #cfe5df;background:#f7fbfa;border-radius:14px;padding:18px;margin-top:16px}
+.cv h3{margin:0 0 4px;font-size:17px;display:flex;align-items:center}.cv p.n{color:var(--mut);font-size:13px;margin:0 0 12px}
+.fv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #e6efed;font-size:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}.seg button{border:0;background:#fff;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+.seg button.on.a{background:#2e7d32;color:#fff}.seg button.on.d{background:#c0392b;color:#fff}.seg button.on.u{background:#b26a00;color:#fff}
+.cv label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px}
+.cv textarea,.cv input[type=text]{width:100%;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.cv textarea{min-height:90px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ovr{display:flex;gap:8px;flex-wrap:wrap}.ovr label{font-weight:500;margin:0;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fff;cursor:pointer}
+.ovr input{margin-right:6px}
+.sign{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:14px 0 4px}
+.signed{background:#e6f5ec;border:1px solid #bfe3cc;color:#1e6b3a;border-radius:10px;padding:12px 14px;font-size:14px;margin-top:12px}
+.stat{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}@media(max-width:860px){.stat{grid-template-columns:1fr 1fr}}
+.take{background:#f2faf7;border:1px solid #cfe5df;border-left:5px solid var(--teal);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.take h3{margin:0 0 6px;font-size:16px;display:flex;align-items:center}.take ul{margin:4px 0 0;padding-left:18px;font-size:14px;line-height:1.6}
+.take.amber{background:#fffaf0;border-color:#f3dfb4;border-left-color:#d9822b}
+.sumrow{display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:center}@media(max-width:600px){.sumrow{grid-template-columns:1fr}}
+.svgc svg{width:100%;height:auto;display:block}.svgc text{font-family:Outfit,system-ui,sans-serif}
+.cap{font-size:13px;color:var(--mut);margin:6px 0 0}
+.charts2{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:860px){.charts2{grid-template-columns:1fr}}
+.legend2{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin:4px 0 6px}.legend2 i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.th{font-size:15px;margin:20px 0 8px;color:var(--ink,#132a34)}.tbl.mt{font-size:14px}.tbl.mt td,.tbl.mt th{padding:7px 6px}.tbl.mt th{white-space:normal;vertical-align:bottom;line-height:1.25}.tbl.mt td,.tbl.mt th{white-space:nowrap}.tbl.mt td:not(:first-child),.tbl.mt th:not(:first-child){text-align:right}.tbl.t1 td:nth-child(2),.tbl.t1 th:nth-child(2){text-align:left}.tbl.t1 td:first-child{color:var(--mut);width:36px}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:8px 24px 32px}
+</style>
+</head>
+<body>
+<header><div class="bar"><div class="brand"><div class="logo">+</div>XRayGuard</div><nav class="links"><a href="#analyze" id="nA" class="on">Analyze</a><a href="#approach" id="nP">Our approach</a></nav></div></header>
+<main>
+<div class="view on" id="vA">
+  <div class="eyebrow">EXPLAINABLE CHEST X-RAY ANALYSIS</div>
+  <h1>Chest X-ray analysis workspace</h1>
+  <p class="sub">Explore model findings, compare scores and generate a draft report.</p>
+  <div class="disc"><b>Research demonstration.</b> Flagged findings need expert review, and low scores do not rule out disease.</div>
+  <div class="status">
+    <div><small>Active model</small><b><span class="dot" id="sDot"></span><span id="sTxt">Checking…</span></b></div>
+    <div><small>Detection</small><b>14 findings</b></div>
+    <div><small>Visualisation</small><b>Region map</b></div>
+    <div><small>Uncertainty</small><b id="sUnc">—</b></div>
+  </div>
+  <div class="steps3">
+    <div class="st"><b><span class="num">1</span>Choose an image</b><span>Upload a de-identified frontal X-ray.</span></div>
+    <div class="st"><b><span class="num">2</span>Run the model</b><span>Score the NIH findings.</span></div>
+    <div class="st"><b><span class="num">3</span>Review the evidence</b><span>Explore the report, tiers and region map.</span></div>
+  </div>
+  <div class="grid">
+    <section class="card">
+      <h2><span class="secno">01</span>Your chest X-ray</h2>
+      <p class="hint">Use a de-identified frontal image (PA or AP).</p>
+      <div class="drop" id="drop"><div class="circle">↑</div>Drop your X-ray here<br><span style="font-size:13px;opacity:.8">or click to choose a PNG or JPEG</span></div>
+      <label class="l" for="file">Image file</label>
+      <div class="row"><input type="file" id="file" accept="image/png,image/jpeg">
+        <select id="view" aria-label="View position"><option>PA</option><option>AP</option></select></div>
+      <p class="small">PNG or JPEG, up to 10 MB</p>
+      <p class="priv">🔒 Uploads are processed in memory. No upload history is saved.</p>
+      <div class="btns"><button class="go" id="go" disabled>Generate report</button><button class="clear" id="clr">Clear analysis</button></div>
+      <div class="err" id="err"></div>
+    </section>
+    <section class="card">
+      <h2><span class="secno">02</span>Draft report</h2>
+      <hr>
+      <div id="out"><div class="ready"><b>Ready when you are</b>Findings and impression will appear here after analysis.</div></div>
+    </section>
+  </div>
+</div>
+
+<div class="view ev" id="vP">
+  <div class="eyebrow">PROJECT CONTRIBUTION</div>
+  <h2>Reports that can be traced to model evidence</h2>
+  <p class="lead">XRayGuard is an auditable workflow: the image model supplies evidence, templates turn it into sentences, and rules check the wording. The individual methods are established; the contribution is integrating them so every sentence can be traced and checked.</p>
+  <div class="sect"><h3>The analysis pipeline</h3><ol class="pipe">
+    <li><b>Image classification</b><span>DenseNet-121 (ImageNet-pretrained) scores 14 NIH findings, fine-tuned on a patient-separated NIH subset.</span></li>
+    <li><b>Validation-derived thresholds</b><span>Per-finding temperature scaling and two thresholds decide whether a finding is stated, hedged or omitted. Precision is targeted on validation, not guaranteed on test.</span></li>
+    <li><b>Prediction variability</b><span>30 MC-dropout samples on the classifier head; unstable predictions are downgraded from "present" to "possible".</span></li>
+    <li><b>Visual evidence</b><span>Class activation maps give approximate side and zone. No segmentation and no size or severity measurement.</span></li>
+    <li><b>Structured reporting</b><span>Deterministic templates or a constrained writer that sees only the evidence table; no confident negatives for sub-threshold findings.</span></li>
+    <li><b>Consistency verification</b><span>A rule checker flags unsupported or overconfident statements, contradictions, laterality mismatches, sizes, prior-study references and devices, then corrects the draft.</span></li></ol></div>
+  <div class="sect"><h3>Our model's results</h3>
+    <p class="n">DenseNet-121 trained on a 10,000-image NIH ChestX-ray14 subset and tested on 1,000 held-out images from 1,000 patients. Mean test AUROC <b>0.819</b> (95% CI 0.798–0.836). Findings are sorted by AUROC; accuracy, MSE, precision, recall and F1 use reporting thresholds chosen on the validation set.</p>
+    <div style="overflow-x:auto"><table class="tbl mt"><tr><th>Finding</th><th>AUROC</th><th>Accuracy</th><th>MSE</th><th>Precision</th><th>Recall</th><th>F1</th></tr><tr><td>Effusion</td><td>0.930</td><td>89.8%</td><td>0.102</td><td>38.7%</td><td>78.6%</td><td>0.519</td></tr><tr><td>Cardiomegaly</td><td>0.895</td><td>95.7%</td><td>0.043</td><td>44.1%</td><td>38.5%</td><td>0.411</td></tr><tr><td>Pneumonia</td><td>0.894</td><td>95.9%</td><td>0.041</td><td>11.4%</td><td>28.6%</td><td>0.163</td></tr><tr><td>Edema</td><td>0.880</td><td>97.0%</td><td>0.030</td><td>4.5%</td><td>10.0%</td><td>0.063</td></tr><tr><td>Hernia</td><td>0.869</td><td>99.6%</td><td>0.004</td><td>0.0%</td><td>0.0%</td><td>0.000</td></tr><tr><td>Pneumothorax</td><td>0.856</td><td>94.6%</td><td>0.054</td><td>29.2%</td><td>41.2%</td><td>0.341</td></tr><tr><td>Emphysema</td><td>0.855</td><td>94.9%</td><td>0.051</td><td>17.6%</td><td>50.0%</td><td>0.261</td></tr><tr><td>Mass</td><td>0.825</td><td>87.1%</td><td>0.129</td><td>13.0%</td><td>53.1%</td><td>0.209</td></tr><tr><td>Atelectasis</td><td>0.817</td><td>81.5%</td><td>0.185</td><td>22.8%</td><td>55.0%</td><td>0.322</td></tr><tr><td>Consolidation</td><td>0.798</td><td>93.2%</td><td>0.068</td><td>5.9%</td><td>13.0%</td><td>0.081</td></tr><tr><td>Fibrosis</td><td>0.785</td><td>95.0%</td><td>0.050</td><td>14.3%</td><td>30.0%</td><td>0.194</td></tr><tr><td>Pleural Thickening</td><td>0.771</td><td>90.1%</td><td>0.099</td><td>9.1%</td><td>29.6%</td><td>0.139</td></tr><tr><td>Nodule</td><td>0.705</td><td>86.9%</td><td>0.131</td><td>13.3%</td><td>31.2%</td><td>0.186</td></tr><tr><td>Infiltration</td><td>0.586</td><td>40.9%</td><td>0.591</td><td>8.9%</td><td>66.3%</td><td>0.157</td></tr><tr class="us"><td>Overall (mean)</td><td>0.819</td><td>88.7%</td><td>0.113</td><td>16.6%</td><td>37.5%</td><td>0.218</td></tr></table></div>
+    <p class="cap">MSE is the mean squared error of the thresholded (0/1) predictions, (FP + FN) / 1,000 per finding — lower is better. Hernia has only 1 positive test case, so its scores are not reliable.</p>
+  </div>
+  <div class="sect"><h3>Position within related work</h3><p class="n">Design-choice comparison, not a benchmark.</p>
+    <table class="tbl"><tr><th>Work</th><th>Approach</th><th>Traceable to evidence</th><th>Rule verification</th></tr>
+    <tr><td>R2Gen (EMNLP 2020)</td><td>Memory-driven Transformer generator</td><td>No</td><td>No</td></tr>
+    <tr><td>Region-guided generation (CVPR 2023)</td><td>One sentence per detected region</td><td>Partly</td><td>No</td></tr>
+    <tr><td>CXR-Agent (2024 preprint)</td><td>VLM probes with uncertainty-aware reporting</td><td>Partly</td><td>No</td></tr>
+    <tr class="us"><td>XRayGuard (ours)</td><td>Calibrated evidence → template/LLM → verifier</td><td>Yes</td><td>Yes</td></tr></table></div>
+  <div class="sect"><h3>Three forms of evidence</h3><div class="three">
+    <div class="st"><b>Wording consistency <span class="tag2 t-ok">Addressed</span></b><span>Verifier + error-injection stress test.</span></div>
+    <div class="st"><b>Label-based performance <span class="tag2 t-part">Measured</span></b><span>AUROC, precision, recall and report-label metrics on held-out patients.</span></div>
+    <div class="st"><b>Clinical correctness <span class="tag2 t-part">In progress</span></b><span>Radiologist sign-off workflow built into the Analyze page.</span></div></div></div>
+  <div class="sect"><h3>Scope and responsible interpretation</h3><ul class="log">
+    <li>Expects frontal PNG/JPEG chest X-rays.</li><li>NIH labels are mined from reports and contain noise.</li><li>Rare findings have few test examples.</li>
+    <li>Localisation, external-hospital and LLM-comparison experiments are incomplete.</li><li>On this demo page, image scores come from an AI vision model following the XRayGuard pipeline, not from the trained DenseNet.</li>
+    <li>Outputs are research drafts that need validation before any clinical use.</li></ul></div>
+  <div class="sect"><h3>Method references</h3><ul class="log">
+    <li>Wang et al., ChestX-ray8, CVPR 2017</li><li>Huang et al., Densely Connected Convolutional Networks, CVPR 2017</li>
+    <li>Guo et al., On Calibration of Modern Neural Networks, ICML 2017</li><li>Gal &amp; Ghahramani, Dropout as a Bayesian Approximation, ICML 2016</li></ul></div>
+</div>
+</main>
+<footer>Capstone research prototype. For demonstration only. Dataset: NIH ChestX-ray14. · <a href="#approach" style="color:inherit">Methods and limitations</a></footer>
+<script>
+const FINDINGS = ["Atelectasis", "Cardiomegaly", "Effusion", "Infiltration", "Mass", "Nodule", "Pneumonia", "Pneumothorax", "Consolidation", "Edema", "Emphysema", "Fibrosis", "Pleural Thickening", "Hernia"];
+const THRESH = 0.50, NEAR = 0.30;
+const STANDALONE = !(window.claude && typeof window.claude.use === 'function');
+function toB64(b) { return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(b); }); }
+function makeSample() {
+  const call = async (prompt, opts = {}) => {
+    const images = [];
+    for (const b of opts.images || []) images.push(await toB64(b));
+    const res = await fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images, findings: FINDINGS }) });
+    if (!res.ok) { const j = await res.json().catch(() => ({})); throw { code: res.status === 429 ? 'rate_limited' : 'server', message: j.detail || ('Server error ' + res.status) }; }
+    return res.json();
+  };
+  const f = async (p, o) => (await call(p, o)).text;
+  f.json = async (p, o) => { const { text } = await call(p, o); const m = text.match(/\{[\s\S]*\}/); return JSON.parse(m ? m[0] : text); };
+  return f;
+}
+function makeDownloads() {
+  return { save: async ({ filename, data }) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'text/plain' })); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); } };
+}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let blob = null, imgURL = null, sample = null, downloads = null, last = null;
+(async () => {
+  sample = STANDALONE ? makeSample() : await claude.use('sample').catch(() => null);
+  if (!sample) showErr('AI analysis is not available.');
+  if (blob) $('go').disabled = !sample;
+})();
+(async () => { downloads = STANDALONE ? makeDownloads() : await claude.use('downloads').catch(() => null); })();
+
+async function pick(f) {
+  $('err').style.display = 'none';
+  if (!f) return;
+  if (!/^image\/(png|jpeg)$/.test(f.type)) return showErr('Please choose a PNG or JPEG image.');
+  if (f.size > 10 * 1024 * 1024) return showErr('Image is larger than 10 MB.');
+  const img = await createImageBitmap(f); const s = Math.min(1, 1024 / Math.max(img.width, img.height));
+  const c = document.createElement('canvas'); c.width = img.width * s; c.height = img.height * s;
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+  imgURL = URL.createObjectURL(blob);
+  $('drop').innerHTML = `<img src="${imgURL}" alt="Uploaded chest X-ray">`;
+  $('go').disabled = !sample;
+}
+function showErr(m) { $('err').textContent = m; $('err').style.display = 'block'; }
+$('file').onchange = e => pick(e.target.files[0]);
+$('drop').onclick = () => $('file').click();
+$('drop').ondragover = e => { e.preventDefault(); $('drop').classList.add('over'); };
+$('drop').ondragleave = () => $('drop').classList.remove('over');
+$('drop').ondrop = e => { e.preventDefault(); $('drop').classList.remove('over'); pick(e.dataTransfer.files[0]); };
+
+$('go').onclick = async () => {
+  if (!blob || !sample) return;
+  $('go').disabled = true; $('go').innerHTML = '<span class="spin"></span>Generating…'; $('err').style.display = 'none';
+  $('out').innerHTML = '<p class="empty"><span class="spin dark"></span>Analysing the image…</p>';
+  const t0 = performance.now();
+  try {
+    const ev = await sample.json(
+`You are scoring a chest radiograph for a research prototype. Look at the attached image and output ONLY JSON.
+First decide if it is a frontal chest radiograph. Then give a score from 0 to 1 for how strongly each finding is visible: ${FINDINGS.join(', ')}.
+Be conservative: most findings are absent on most films, so most scores should be low. For any finding scored 0.3 or higher, give the region where it is visible as a box in image coordinates (fractions 0-1 of width and height: x, y, w, h).
+JSON shape: {"is_chest_xray":bool,"scores":[{"name":string,"score":number,"box":{"x":number,"y":number,"w":number,"h":number}|null}]}`,
+      { images: [blob], modelTier: 'complex' });
+    if (!ev.is_chest_xray) { $('out').innerHTML = '<p class="empty">This does not look like a frontal chest X-ray. Please upload a chest radiograph.</p>'; return; }
+    const sc = FINDINGS.map(n => { const f = (ev.scores || []).find(x => x.name.toLowerCase() === n.toLowerCase()) || {};
+      return { name: n, score: Math.max(0, Math.min(1, +f.score || 0)), box: f.box || null }; }).sort((a, b) => b.score - a.score);
+    render(sc, performance.now() - t0);
+  } catch (e) {
+    $('out').innerHTML = '<p class="empty">Upload an X-ray and click <b>Generate report</b>.</p>';
+    showErr(e.code === 'rate_limited' ? 'Too many requests — wait a minute and try again.' : e.code === 'not_granted' ? 'Permission to analyse the image was not granted.' : 'Something went wrong: ' + (e.message || e));
+  } finally { $('go').disabled = false; $('go').textContent = 'Generate report'; }
+};
+
+const pct = v => (v * 100).toFixed(1) + '%';
+const C = { hi: '#c0392b', near: '#d9822b', low: '#5f9b90', grey: '#9aa5b1', blue: '#2b5c8a', green: '#2e7d32', ink: '#132a34', mut: '#5b6b72', grid: '#e6ecee' };
+function hbars(rows, o = {}) {
+  const max = o.max || 1, W = 640, L = o.label || 170, R = 56, rh = 26, top = 18, H = top + rows.length * rh + 22, x = v => L + (W - L - R) * Math.min(v, max) / max;
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.title || 'bar chart')}">`;
+  for (const t of (o.ticks || [0, .25, .5, .75, 1].map(v => v * max))) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${top - 6}" y2="${H - 20}" stroke="${C.grid}"/><text x="${x(t)}" y="${H - 6}" font-size="11" fill="${C.mut}" text-anchor="middle">${o.tickFmt ? o.tickFmt(t) : t}</text>`;
+  rows.forEach((r, i) => { const y = top + i * rh;
+    g += `<text x="${L - 8}" y="${y + 16}" font-size="13" fill="${C.ink}" text-anchor="end"${r.bold ? ' font-weight="700"' : ''}>${esc(r.label)}</text>
+      <rect x="${L}" y="${y + 4}" width="${Math.max(2, x(r.value) - L)}" height="16" rx="4" fill="${r.color || C.blue}"/>
+      <text x="${x(r.value) + 6}" y="${y + 16}" font-size="12" font-weight="600" fill="${C.ink}">${o.fmt ? o.fmt(r.value) : r.value}</text>`; });
+  for (const l of o.lines || []) g += `<line x1="${x(l.v)}" x2="${x(l.v)}" y1="${top - 10}" y2="${H - 20}" stroke="${l.color || C.ink}" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${x(l.v) + 4}" y="${top - 2}" font-size="11" fill="${l.color || C.ink}">${esc(l.label)}</text>`;
+  return g + '</svg>';
+}
+function vgroups(groups, series, o = {}) {
+  const max = o.max || 1, W = 640, H = 270, L = 44, B = 52, T = 20, gw = (W - L - 10) / groups.length, bw = Math.min(34, (gw - 18) / series.length), y = v => T + (H - T - B) * (1 - Math.min(v, max) / max);
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.title || 'chart')}">`;
+  for (let t = 0; t <= 4; t++) { const v = max * t / 4; g += `<line x1="${L}" x2="${W - 6}" y1="${y(v)}" y2="${y(v)}" stroke="${C.grid}"/><text x="${L - 6}" y="${y(v) + 4}" font-size="11" fill="${C.mut}" text-anchor="end">${o.tickFmt ? o.tickFmt(v) : v}</text>`; }
+  groups.forEach((gr, i) => { const x0 = L + i * gw + (gw - bw * series.length) / 2;
+    series.forEach((s, j) => { const v = s.values[i], x = x0 + j * bw;
+      g += `<rect x="${x + 2}" y="${y(v)}" width="${bw - 4}" height="${Math.max(1, H - B - y(v))}" rx="3" fill="${s.color}"/><text x="${x + bw / 2}" y="${y(v) - 5}" font-size="11" font-weight="600" fill="${C.ink}" text-anchor="middle">${o.fmt ? o.fmt(v) : v}</text>`; });
+    gr.split('\n').forEach((ln, k) => g += `<text x="${L + i * gw + gw / 2}" y="${H - B + 18 + k * 14}" font-size="12" fill="${C.ink}" text-anchor="middle">${esc(ln)}</text>`); });
+  for (const l of o.lines || []) g += `<line x1="${L}" x2="${W - 6}" y1="${y(l.v)}" y2="${y(l.v)}" stroke="${l.color || C.ink}" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W - 8}" y="${y(l.v) - 5}" font-size="11" fill="${l.color || C.ink}" text-anchor="end">${esc(l.label)}</text>`;
+  return g + '</svg>';
+}
+function donut(parts, center, sub) {
+  const tot = parts.reduce((a, p) => a + p.value, 0) || 1, r = 52, cx = 70, cy = 70, sw = 20, circ = 2 * Math.PI * r;
+  let off = 0, g = `<svg viewBox="0 0 140 140" role="img" aria-label="${esc(center + ' ' + (sub || ''))}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${C.grid}" stroke-width="${sw}"/>`;
+  for (const p of parts) { const len = circ * p.value / tot; if (len > 0) g += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${p.color}" stroke-width="${sw}" stroke-dasharray="${len} ${circ - len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"/>`; off += len; }
+  return g + `<text x="${cx}" y="${cy + 2}" font-size="24" font-weight="800" fill="${C.ink}" text-anchor="middle">${esc(center)}</text><text x="${cx}" y="${cy + 20}" font-size="10" fill="${C.mut}" text-anchor="middle">${esc(sub || '')}</text></svg>`;
+}
+const legend = items => `<div class="legend2">${items.map(([c, t]) => `<span><i style="background:${c}"></i>${esc(t)}</span>`).join('')}</div>`;
+
+
+function radar(sc) {
+  const n = sc.length, cx = 230, cy = 205, R = 150, pt = (i, v) => { const a = -Math.PI / 2 + 2 * Math.PI * i / n; return [cx + R * v * Math.cos(a), cy + R * v * Math.sin(a)]; };
+  let g = `<svg viewBox="-40 0 540 420" style="max-width:520px;margin:auto" role="img" aria-label="Radar chart of 14 finding scores">`;
+  for (const r of [.25, .5, .75, 1]) g += `<polygon points="${sc.map((_, i) => pt(i, r).join(',')).join(' ')}" fill="none" stroke="${r === THRESH ? C.hi : C.grid}" ${r === THRESH ? 'stroke-dasharray="5 4"' : ''}/>`;
+  sc.forEach((s, i) => { const [x, y] = pt(i, 1), [lx, ly] = pt(i, 1.13); g += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${C.grid}"/><text x="${lx}" y="${ly + 4}" font-size="13" fill="${C.ink}" text-anchor="${lx < cx - 5 ? 'end' : lx > cx + 5 ? 'start' : 'middle'}">${esc(s.name)}</text>`; });
+  g += `<polygon points="${sc.map((s, i) => pt(i, Math.max(s.score, .02)).join(',')).join(' ')}" fill="rgba(43,92,138,.22)" stroke="${C.blue}" stroke-width="2"/>`;
+  sc.forEach((s, i) => { const [x, y] = pt(i, Math.max(s.score, .02)); g += `<circle cx="${x}" cy="${y}" r="${s.score >= THRESH ? 5 : 3}" fill="${s.score >= THRESH ? C.hi : s.score >= NEAR ? C.near : C.blue}"/>`; });
+  return g + `<text x="${cx + 4}" y="${cy - R * THRESH - 4}" font-size="10" fill="${C.hi}">50%</text></svg>`;
+}
+function zoneMap(sc) {
+  const z = {}; for (const side of ['R', 'L']) for (const lvl of ['Upper', 'Middle', 'Lower']) z[side + lvl] = [];
+  for (const s of sc.filter(s => s.box && s.score >= NEAR)) {
+    const cx = s.box.x + s.box.w / 2, cy = s.box.y + s.box.h / 2;
+    z[(cx < .5 ? 'R' : 'L') + (cy < 1 / 3 ? 'Upper' : cy < 2 / 3 ? 'Middle' : 'Lower')].push(s);
+  }
+  const cell = (k, x, y) => { const f = z[k], m = f.length ? Math.max(...f.map(s => s.score)) : 0, col = m >= THRESH ? C.hi : m >= NEAR ? C.near : '#eef4f3';
+    return `<rect x="${x}" y="${y}" width="150" height="70" rx="10" fill="${col}" fill-opacity="${f.length ? .85 : 1}" stroke="#fff" stroke-width="3"/>
+      <text x="${x + 75}" y="${y + 28}" font-size="12" font-weight="700" fill="${f.length ? '#fff' : C.mut}" text-anchor="middle">${k.slice(1)} zone</text>
+      <text x="${x + 75}" y="${y + 48}" font-size="11" fill="${f.length ? '#fff' : C.mut}" text-anchor="middle">${f.length ? esc(f.map(s => s.name).join(', ')).slice(0, 26) : 'nothing flagged'}</text>`; };
+  let g = `<svg viewBox="0 0 340 280" style="max-width:420px;margin:auto" role="img" aria-label="Flagged findings by lung zone"><text x="85" y="18" font-size="12" font-weight="700" fill="${C.ink}" text-anchor="middle">Patient's RIGHT</text><text x="255" y="18" font-size="12" font-weight="700" fill="${C.ink}" text-anchor="middle">Patient's LEFT</text>`;
+  ['Upper', 'Middle', 'Lower'].forEach((l, i) => { g += cell('R' + l, 10, 30 + i * 80) + cell('L' + l, 180, 30 + i * 80); });
+  const used = Object.entries(z).filter(([, v]) => v.length).map(([k, v]) => `${k[0] === 'R' ? 'right' : 'left'} ${k.slice(1).toLowerCase()} zone (${v.map(s => s.name).join(', ')})`);
+  return { svg: g + '</svg>', text: used.length ? `Flagged findings appear in the ${used.join('; ')}.` : 'No region was marked for the flagged findings.' };
+}
+
+function takeaways(sc, t) {
+  const top = sc[0], low = sc.filter(s => s.score < NEAR).length, out = [];
+  if (t.hi.length) out.push(`<b>${t.hi.length} finding${t.hi.length > 1 ? 's' : ''} stand${t.hi.length > 1 ? '' : 's'} out:</b> ${t.hi.map(s => esc(s.name)).join(', ')} scored above the ${THRESH * 100}% display threshold.`);
+  else out.push('<b>No finding crossed the display threshold</b> — the model did not flag anything strongly on this image.');
+  if (t.near.length) out.push(`<b>${t.near.length} borderline:</b> ${t.near.map(s => esc(s.name)).join(', ')} — worth a closer look, but weak evidence.`);
+  out.push(`<b>${low} of ${sc.length}</b> findings scored low (under ${NEAR * 100}%).`);
+  out.push(`Highest score: <b>${esc(top.name)} at ${pct(top.score)}</b>. Scores show how strongly a pattern is visible, not the chance of disease.`);
+  return out;
+}
+
+function texts(sc) {
+  const hi = sc.filter(s => s.score >= THRESH), near = sc.filter(s => s.score >= NEAR && s.score < THRESH);
+  let f = [];
+  if (hi.length) f.push('Scores at or above display thresholds: ' + hi.map(s => `${s.name} (${pct(s.score)})`).join(', ') + '.');
+  if (near.length) f.push('Scores near display thresholds: ' + near.map(s => `${s.name} (${pct(s.score)})`).join(', ') + '.');
+  if (!f.length) f.push('No finding scored near or above its display threshold.');
+  f.push('Scores are not calibrated probabilities and are not a diagnosis.');
+  const imp = [...hi.map(s => `Score for ${s.name} is above its display threshold (${pct(s.score)}).`),
+               ...near.map(s => `Score for ${s.name} is near its display threshold (${pct(s.score)}).`)];
+  if (!imp.length) imp.push('No acute finding scored above display thresholds.');
+  return { findings: f.join(' '), impression: imp.map((s, i) => `${i + 1}. ${s}`).join(' ') + ' These scores require clinician review.', hi, near };
+}
+
+function render(sc, ms) {
+  const t = texts(sc); last = { ...t, sc };
+  const color = v => v >= THRESH ? 'var(--hi)' : v >= NEAR ? 'var(--near)' : 'var(--teal)';
+  const tk = takeaways(sc, t), lowN = sc.filter(s => s.score < NEAR).length, zm = zoneMap(sc);
+  $('out').innerHTML = `
+    <div class="take${t.hi.length ? ' amber' : ''}"><h3><span class="ms">lightbulb</span>Key takeaways</h3>
+      <div class="sumrow"><div class="svgc">${donut([{ value: t.hi.length, color: C.hi }, { value: t.near.length, color: C.near }, { value: lowN, color: C.low }], String(t.hi.length), 'flagged of ' + sc.length)}</div>
+      <ul>${tk.map(x => '<li>' + x + '</li>').join('')}</ul></div></div>
+    <div class="blk"><h3><span class="ms">clinical_notes</span>Findings</h3><div class="txt">${esc(t.findings)}</div></div>
+    <div class="blk"><h3><span class="ms">diagnosis</span>Impression</h3><div class="txt">${esc(t.impression)}</div></div>
+    <div class="blk"><h3><span class="ms">monitoring</span>Model Scores — all 14 findings</h3>
+      ${legend([[C.hi, 'Above threshold (≥' + THRESH * 100 + '%)'], [C.near, 'Borderline (' + NEAR * 100 + '–' + THRESH * 100 + '%)'], [C.low, 'Low (<' + NEAR * 100 + '%)']])}
+      <div class="svgc">${hbars(sc.map(s => ({ label: s.name, value: s.score, color: s.score >= THRESH ? C.hi : s.score >= NEAR ? C.near : C.low })),
+        { title: 'Finding scores', fmt: pct, tickFmt: v => Math.round(v * 100) + '%', lines: [{ v: NEAR, label: 'borderline', color: C.near }, { v: THRESH, label: 'threshold', color: C.hi }] })}</div>
+      <p class="cap">Each bar is one finding. Bars that cross the red dashed line are flagged; bars between the two lines are borderline.</p>
+    </div>
+    <div class="blk"><h3><span class="ms">insights</span>Visual summary</h3>
+      <div class="charts2" style="grid-template-columns:1fr">
+        <div><b style="font-size:14px">Finding profile</b><div class="svgc">${radar(sc.slice().sort((a, b) => FINDINGS.indexOf(a.name) - FINDINGS.indexOf(b.name)))}</div>
+          <p class="cap">The blue shape reaches outward for higher scores. Points past the red dashed ring (50%) are flagged.</p></div>
+        <div><b style="font-size:14px">Where in the lungs</b><div class="svgc">${zm.svg}</div>
+          <p class="cap">${esc(zm.text)} Red = above threshold, orange = borderline.</p></div>
+      </div></div>
+    <div class="blk"><h3><span class="ms">thermostat</span>Region of Interest Map</h3>
+      <div class="heatwrap"><img id="hImg" src="${imgURL}" alt="X-ray with highlighted regions"><canvas id="hCan"></canvas></div>
+      <p class="small">AI-estimated regions for findings scored ≥ ${NEAR * 100}%. Not a Grad-CAM from a trained network.</p></div>
+    <div class="blk"><h3><span class="ms">category</span>Finding Tiers</h3>
+      <div class="tier"><b>At / above display threshold</b>${t.hi.length ? t.hi.map(s => `<span class="chip hi">${esc(s.name)} (score: ${pct(s.score)})</span>`).join('') : '<span class="chip none">None</span>'}</div>
+      <div class="tier"><b>Near display threshold</b>${t.near.length ? t.near.map(s => `<span class="chip near">${esc(s.name)} (score: ${pct(s.score)})</span>`).join('') : '<span class="chip none">None</span>'}</div>
+    </div>
+    <div class="meta"><span>Inference time: ${ms.toFixed(1)} ms</span><span>Scored by AI vision model · XRayGuard pipeline</span></div>
+    <div class="actions">
+      <button class="act" id="cp"><span class="ms">content_copy</span>Copy</button>
+      ${downloads ? '<button class="act" id="dl"><span class="ms">download</span>Download report</button><button class="act" id="ex"><span class="ms">data_object</span>Export evidence</button>' : ''}
+      <button class="act" id="nw"><span class="ms">refresh</span>New scan</button>
+    </div>
+    <div id="cvBox"></div>`;
+  renderCV(sc);
+  $('hImg').onload = () => drawHeat(sc); if ($('hImg').complete) drawHeat(sc);
+  $('cp').onclick = async () => { try { await navigator.clipboard.writeText(reportText()); $('cp').lastChild.textContent = 'Copied ✓'; setTimeout(() => $('cp').lastChild.textContent = 'Copy', 1500); } catch {} };
+  if ($('ex')) $('ex').onclick = async () => { try { await downloads.save({ filename: 'xrayguard_evidence.json', data: JSON.stringify({ review: last.review || null, view: $('view').value, thresholds: { display: THRESH, near: NEAR }, scores: last.sc, findings: last.findings, impression: last.impression, generated: new Date().toISOString() }, null, 2) }); } catch {} };
+  if ($('dl')) $('dl').onclick = async () => { try { await downloads.save({ filename: 'xrayguard_report.txt', data: reportText() }); } catch {} };
+  $('nw').onclick = () => { blob = null; last = null; $('file').value = ''; $('go').disabled = true;
+    $('drop').innerHTML = '<div class="circle">↑</div>Choose an image to preview it here.';
+    $('out').innerHTML = '<div class="ready"><b>Ready when you are</b>Findings and impression will appear here after analysis.</div>'; };
+}
+
+function drawHeat(sc) {
+  const img = $('hImg'), c = $('hCan'); if (!img || !c) return;
+  c.width = img.clientWidth; c.height = img.clientHeight;
+  const g = c.getContext('2d');
+  for (const s of sc.filter(s => s.box && s.score >= NEAR)) {
+    const b = s.box, cx = (b.x + b.w / 2) * c.width, cy = (b.y + b.h / 2) * c.height, r = Math.max(b.w * c.width, b.h * c.height) * 0.7;
+    const grd = g.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grd.addColorStop(0, `rgba(255,40,0,${0.25 + 0.4 * s.score})`); grd.addColorStop(0.5, `rgba(255,200,0,${0.15 + 0.2 * s.score})`); grd.addColorStop(1, 'rgba(0,80,255,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, c.width, c.height);
+  }
+}
+
+function reportText() {
+  if (!last) return '';
+  return `XRayGuard draft report (${$('view').value} view)\n\nFINDINGS:\n${last.findings}\n\nIMPRESSION:\n${last.impression}\n\nSCORES:\n` +
+    last.sc.map(s => `${s.name}: ${pct(s.score)}`).join('\n') + '\n\nResearch use only - not for clinical use.';
+}
+
+function route() {
+  const h = location.hash.slice(1) || 'analyze';
+  const map = { analyze: 'vA', approach: 'vP' };
+  const v = map[h] || 'vA';
+  for (const id of ['vA', 'vP']) $(id).classList.toggle('on', id === v);
+  $('nA').classList.toggle('on', v === 'vA'); $('nP').classList.toggle('on', v === 'vP');
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route); route();
+setTimeout(() => { $('sDot').className = 'dot ' + (sample ? 'ok' : 'bad'); $('sTxt').textContent = sample ? 'XRayGuard pipeline · ready' : 'Unavailable'; $('sUnc').textContent = sample ? 'Tiered' : '—'; }, 1500);
+$('clr').onclick = () => { blob = null; last = null; $('file').value = ''; $('go').disabled = true; $('err').style.display = 'none';
+  $('drop').innerHTML = '<div class="circle">↑</div>Drop your X-ray here<br><span style="font-size:13px;opacity:.8">or click to choose a PNG or JPEG</span>';
+  $('out').innerHTML = '<div class="ready"><b>Ready when you are</b>Findings and impression will appear here after analysis.</div>'; };
+const EVAL = {model: 'DenseNet-121, NIH ChestX-ray14 10k subset', test_images: 1000, test_patients: 1000,
+  mean_auroc: 0.819, auroc_ci95: [0.798, 0.836], pneumonia: {auroc: 0.894, ci95: [0.840, 0.941], auprc: 0.092, positives: 14, precision: 0.114, recall: 0.286, specificity: 0.969},
+  ece: {raw: 0.023, calibrated: 0.031}, tiers: {ppv_present: 0.458, ppv_possible: 0.137, npv_absent: 0.980},
+  report_methods: {naive_0_5: {hallucination: 0.592, false_assertion: 0.592, micro_f1: 0.234, flagged: 0.148}, f1_definite: {hallucination: 0.843, false_assertion: 0.843, micro_f1: 0.239, flagged: 0.782},
+    tiered_no_mc: {hallucination: 0.843, false_assertion: 0.566, micro_f1: 0.239, flagged: 0.035}, tiered_mc_ours: {hallucination: 0.843, false_assertion: 0.538, micro_f1: 0.239, flagged: 0.0}},
+  stress_test: {injected: 3518, detection: 1.0, repair: 1.0, clean_false_alarm: 0.0}};
+if ($('dlEval')) $('dlEval').onclick = async () => { if (!downloads) return; try { await downloads.save({ filename: 'xrayguard_evaluation.json', data: JSON.stringify(EVAL, null, 2) }); } catch {} };
+
+let db = null, user = null, uid = null;
+(async () => { if (!STANDALONE) { db = await claude.use('db').catch(() => null); user = await claude.use('user').catch(() => null); }
+  if (user) { try { uid = await user.id(); } catch {} } loadReviews(); })();
+
+function renderCV(sc) {
+  const flagged = sc.filter(s => s.score >= NEAR);
+  const verdict = {};
+  $('cvBox').innerHTML = `<div class="cv">
+    <h3><span class="ms">verified_user</span>Clinical verification</h3>
+    <p class="n">For a qualified clinician. Rate each flagged finding against the image, correct the report, then sign off. The image itself is not stored.</p>
+    ${flagged.length ? flagged.map((s, i) => `<div class="fv"><span>${esc(s.name)} <span style="color:var(--mut)">(${pct(s.score)})</span></span>
+      <span class="seg" data-f="${esc(s.name)}"><button class="a" data-v="agree">Agree</button><button class="u" data-v="unsure">Unsure</button><button class="d" data-v="disagree">Disagree</button></span></div>`).join('')
+      : '<p class="n">No findings were flagged by the model.</p>'}
+    <label>Findings the model missed (comma-separated)</label>
+    <input type="text" id="cvMiss" placeholder="e.g. Effusion, Nodule">
+    <label>Corrected report</label>
+    <textarea id="cvText">FINDINGS:\n${esc(last.findings)}\n\nIMPRESSION:\n${esc(last.impression)}</textarea>
+    <label>Overall assessment</label>
+    <div class="ovr">${[['accept', 'Accept as is'], ['minor', 'Minor edits'], ['major', 'Major edits'], ['reject', 'Reject']].map(([v, t]) => `<label><input type="radio" name="ovr" value="${v}">${t}</label>`).join('')}</div>
+    <div class="two"><div><label>Reviewer name</label><input type="text" id="cvName" placeholder="Dr. …"></div>
+      <div><label>Designation / registration</label><input type="text" id="cvDes" placeholder="Consultant Radiologist"></div></div>
+    <label>Comments</label><textarea id="cvCom" style="min-height:60px"></textarea>
+    <div class="sign"><input type="checkbox" id="cvOk"><span>I am a qualified clinician and I reviewed this image and report.</span></div>
+    <button class="go" id="cvSave" style="margin-top:8px">Sign off review</button>
+    <div id="cvMsg"></div></div>`;
+  $('cvBox').querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => {
+    g.querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); verdict[g.dataset.f] = b.dataset.v; }));
+  $('cvSave').onclick = async () => {
+    const ov = (document.querySelector('input[name=ovr]:checked') || {}).value;
+    const msg = t => $('cvMsg').innerHTML = `<div class="err" style="display:block">${esc(t)}</div>`;
+    if (flagged.some(s => !verdict[s.name])) return msg('Rate every flagged finding.');
+    if (!ov) return msg('Choose an overall assessment.');
+    if (!$('cvName').value.trim()) return msg('Enter the reviewer name.');
+    if (!$('cvOk').checked) return msg('Confirm the attestation checkbox.');
+    const rec = { at: new Date().toISOString(), view: $('view').value, scores: sc.map(s => ({ name: s.name, score: +s.score.toFixed(3) })),
+      generated: { findings: last.findings, impression: last.impression }, verdicts: verdict,
+      missed: $('cvMiss').value.split(',').map(x => x.trim()).filter(Boolean), corrected: $('cvText').value, overall: ov,
+      reviewer: $('cvName').value.trim().slice(0, 80), designation: $('cvDes').value.trim().slice(0, 80), comments: $('cvCom').value.trim().slice(0, 1000) };
+    last.review = rec;
+    $('cvSave').disabled = true;
+    try {
+      if (!db || !uid) {
+        const arr = JSON.parse(localStorage.getItem('xg_reviews') || '[]'); arr.push(rec); localStorage.setItem('xg_reviews', JSON.stringify(arr.slice(-500)));
+        $('cvMsg').innerHTML = `<div class="signed">✓ Signed off by ${esc(rec.reviewer)} at ${new Date(rec.at).toLocaleString()}. Saved in this browser. Use Export evidence to keep a copy.</div>`;
+        loadReviews(); return;
+      }
+      const ref = db.doc('reviews/' + uid);
+      const cur = await ref.get();
+      const list = (cur && cur.exists && cur.data().items) || [];
+      list.push(rec);
+      await ref.set({ items: list.slice(-200) });
+      $('cvMsg').innerHTML = `<div class="signed">✓ Signed off by ${esc(rec.reviewer)} at ${new Date(rec.at).toLocaleString()}. </div>`;
+      loadReviews();
+    } catch (e) {
+      $('cvMsg').innerHTML = `<div class="signed" style="background:#fff7e6;border-color:#f3d9a4;color:#6f4500">Review recorded for this session but could not be saved to the shared study${e.message === 'nodb' ? ' (shared storage not enabled yet)' : ''}. Use Export evidence to keep a copy.</div>`;
+    } finally { $('cvSave').disabled = false; }
+  };
+}
+
+let ALL = [];
+async function loadReviews() {
+  if (!$('cvSum')) return;
+  if (!db) { try { ALL = JSON.parse(localStorage.getItem('xg_reviews') || '[]'); } catch { ALL = []; } summarise(); return; }
+  const timer = setTimeout(() => { if (!ALL.length) $('cvSum').innerHTML = '<p class="n">No reviews yet.</p>'; }, 10000);
+  try {
+    const snap = await db.collection('reviews').get();
+    clearTimeout(timer);
+    ALL = [];
+    snap.forEach(d => (d.data().items || []).forEach(r => ALL.push(r)));
+    summarise();
+  } catch { clearTimeout(timer); $('cvSum').innerHTML = '<p class="n">Could not load reviews.</p>'; }
+}
+function summarise() {
+  if (!$('cvSum')) return;
+  if (!ALL.length) { $('cvSum').innerHTML = '<p class="n">No reviews yet. Generate a report on the Analyze page and ask a radiologist to sign it off.</p>'; return; }
+  const n = ALL.length, revs = new Set(ALL.map(r => r.reviewer)).size;
+  const ov = { accept: 0, minor: 0, major: 0, reject: 0 }; ALL.forEach(r => ov[r.overall] = (ov[r.overall] || 0) + 1);
+  const per = {}; let ag = 0, dis = 0, un = 0, miss = 0;
+  ALL.forEach(r => { Object.entries(r.verdicts || {}).forEach(([f, v]) => { per[f] = per[f] || { agree: 0, disagree: 0, unsure: 0 }; per[f][v]++;
+    if (v === 'agree') ag++; else if (v === 'disagree') dis++; else un++; }); miss += (r.missed || []).length; });
+  const ppv = ag + dis ? ag / (ag + dis) : null;
+  $('cvSum').innerHTML = `<div class="stat">
+    <div class="kp"><small>Reviews signed</small><b>${n}</b><i>${revs} reviewer${revs > 1 ? 's' : ''}</i></div>
+    <div class="kp"><small>Accepted (as is + minor)</small><b>${Math.round((ov.accept + ov.minor) / n * 100)}%</b><i>${ov.accept} as is · ${ov.minor} minor</i></div>
+    <div class="kp"><small>Flag agreement</small><b>${ppv == null ? '—' : Math.round(ppv * 100) + '%'}</b><i>${ag} agree · ${dis} disagree · ${un} unsure</i></div>
+    <div class="kp"><small>Findings missed by model</small><b>${miss}</b><i>${(miss / n).toFixed(2)} per report</i></div></div>
+    <div class="charts2"><div><b>Overall verdicts</b><div class="svgc">${vgroups(['Accept', 'Minor\nedits', 'Major\nedits', 'Reject'], [{ color: C.blue, values: [ov.accept, ov.minor, ov.major, ov.reject] }], { max: Math.max(1, ov.accept, ov.minor, ov.major, ov.reject), fmt: v => v, tickFmt: v => Math.round(v) })}</div></div>
+    <div class="take" style="align-self:center"><ul><li><b>${Math.round((ov.accept + ov.minor) / n * 100)}%</b> of reports were usable with at most minor edits.</li><li>Radiologists agreed with <b>${ppv == null ? '—' : Math.round(ppv * 100) + '%'}</b> of flagged findings.</li><li>${miss ? `<b>${miss}</b> findings were missed by the model across ${n} reports.` : 'No missed findings were reported.'}</li></ul></div></div>
+    <table class="tbl"><tr><th>Finding</th><th>Agree</th><th>Disagree</th><th>Unsure</th><th>Agreement</th></tr>
+    ${Object.entries(per).sort((a, b) => (b[1].agree + b[1].disagree) - (a[1].agree + a[1].disagree)).map(([f, c]) =>
+      `<tr><td>${esc(f)}</td><td>${c.agree}</td><td>${c.disagree}</td><td>${c.unsure}</td><td>${c.agree + c.disagree ? Math.round(c.agree / (c.agree + c.disagree) * 100) + '%' : '—'}</td></tr>`).join('')}</table>
+    <p class="n" style="margin-top:10px">Overall: ${ov.accept} accepted, ${ov.minor} minor edits, ${ov.major} major edits, ${ov.reject} rejected. Agreement = agree / (agree + disagree), "unsure" excluded.</p>`;
+}
+if ($('dlRev')) $('dlRev').onclick = async () => { if (!downloads) return; try { await downloads.save({ filename: 'xrayguard_clinical_reviews.json', data: JSON.stringify(ALL, null, 2) }); } catch {} };
+
+function drawEval() {
+  if (!$('chAuc')) return;
+  if ($('chAuc').innerHTML) return;
+  $('chAuc').innerHTML = hbars([{ label: 'Random guess', value: .5, color: C.grey }, { label: 'NIH baseline (2017)', value: .745, color: C.grey },
+    { label: 'XRayGuard (ours)', value: .819, color: C.green, bold: true }, { label: 'CheXNet (2017)', value: .841, color: C.grey }],
+    { title: 'Mean AUROC comparison', min: .4, max: 1, fmt: v => v.toFixed(3), tickFmt: v => v.toFixed(2), label: 150 });
+  $('chVer').innerHTML = legend([[C.near, 'False-assertion rate'], [C.hi, 'Reports flagged']]) + vgroups(['Naive\n0.5', 'F1-\ndefinite', 'Tiered\nno MC', 'XRayGuard\n(ours)'],
+    [{ color: C.near, values: [.592, .843, .566, .538] }, { color: C.hi, values: [.148, .782, .035, 0] }], { title: 'Report correctness', fmt: v => Math.round(v * 100) + '%', tickFmt: v => Math.round(v * 100) + '%' });
+  $('chTier').innerHTML = vgroups(['Present\n(PPV)', 'Possible\n(PPV)', 'Absent\n(NPV)'], [{ color: C.blue, values: [.458, .137, .98] }],
+    { title: 'Tier reliability', fmt: v => Math.round(v * 100) + '%', tickFmt: v => Math.round(v * 100) + '%', lines: [{ v: .6, label: 'target 60%', color: C.hi }] });
+  $('chStress').innerHTML = donut([{ value: 3518, color: C.green }], '100%', 'errors caught');
+  $('chCal').innerHTML = hbars([{ label: 'Raw model', value: .023, color: C.grey }, { label: 'Calibrated', value: .031, color: C.near }],
+    { title: 'Calibration error', max: .05, fmt: v => v.toFixed(3), tickFmt: v => v.toFixed(2), ticks: [0, .01, .02, .03, .04, .05], label: 110 });
+}
+</script>
+</body>
+</html>
